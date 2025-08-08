@@ -529,7 +529,7 @@
             async loadLyrics(songUrl) {
                 try {
                     const lrcUrl = songUrl.replace('.mp3', '.lrc');
-                    const response = await fetch('./' + lrcUrl);  // ✅ 修正：直接指向根目录
+                    const response = await fetch('./' + lrcUrl);
                     if (response.ok) {
                         const lrcText = await response.text();
                         this.lyrics = this.parseLRC(lrcText);
@@ -850,54 +850,33 @@
 </body>
 </html>
 
-// 在 MobileMusicPlayer 类中添加 loadLocalPlaylist 方法
+// 在 MobileMusicPlayer 类中添加这个方法
 loadLocalPlaylist() {
     this.playlistData = [
-        { title: '三生三世', artist: '周杰伦', url: '三生三世.mp3' },
-        { title: '不能说的秘密', artist: '周杰伦', url: '不能说的秘密.mp3' },
-        { title: '兰亭序', artist: '周杰伦', url: '兰亭序.mp3' },
-        { title: '可惜没如果', artist: '林俊杰', url: '可惜没如果.mp3' },
-        { title: '告白气球', artist: '周杰伦', url: '告白气球.mp3' },
-        { title: '手写的从前', artist: '周杰伦', url: '手写的从前.mp3' },
-        { title: '搁浅', artist: '周杰伦', url: '搁浅.mp3' },
-        { title: '晴天', artist: '周杰伦', url: '晴天.mp3' },
-        { title: '月牙湾', artist: '飞儿乐团', url: '月牙湾.mp3' },
-        { title: '枫', artist: '周杰伦', url: '枫.mp3' },
-        { title: '珊瑚海', artist: '周杰伦', url: '珊瑚海.mp3' },
-        { title: '稻香', artist: '周杰伦', url: '稻香.mp3' },
-        { title: '等你下课', artist: '周杰伦', url: '等你下课.mp3' },
-        { title: '简单爱', artist: '周杰伦', url: '简单爱.mp3' },
-        { title: '给我一首歌的时间', artist: '周杰伦', url: '给我一首歌的时间.mp3' },
-        { title: '花海', artist: '周杰伦', url: '花海.mp3' },
-        { title: '蒲公英的约定', artist: '周杰伦', url: '蒲公英的约定.mp3' },
-        { title: '说好的幸福呢', artist: '周杰伦', url: '说好的幸福呢.mp3' },
-        { title: '青花瓷', artist: '周杰伦', url: '青花瓷.mp3' }
+        { title: '三生三世', artist: '周杰伦', url: 'playlist/三生三世.mp3' },
+        { title: '不能说的秘密', artist: '周杰伦', url: 'playlist/不能说的秘密.mp3' },
+        { title: '兰亭序', artist: '周杰伦', url: 'playlist/兰亭序.mp3' },
+        { title: '可惜没如果', artist: '林俊杰', url: 'playlist/可惜没如果.mp3' },
+        { title: '告白气球', artist: '周杰伦', url: 'playlist/告白气球.mp3' },
+        { title: '手写的从前', artist: '周杰伦', url: 'playlist/手写的从前.mp3' },
+        { title: '搁浅', artist: '周杰伦', url: 'playlist/搁浅.mp3' },
+        { title: '晴天', artist: '周杰伦', url: 'playlist/晴天.mp3' },
+        { title: '月牙湾', artist: '飞儿乐团', url: 'playlist/月牙湾.mp3' },
+        { title: '枫', artist: '周杰伦', url: 'playlist/枫.mp3' },
+        { title: '珊瑚海', artist: '周杰伦', url: 'playlist/珊瑚海.mp3' },
+        { title: '稻香', artist: '周杰伦', url: 'playlist/稻香.mp3' },
+        { title: '等你下课', artist: '周杰伦', url: 'playlist/等你下课.mp3' },
+        { title: '简单爱', artist: '周杰伦', url: 'playlist/简单爱.mp3' },
+        { title: '给我一首歌的时间', artist: '周杰伦', url: 'playlist/给我一首歌的时间.mp3' },
+        { title: '花海', artist: '周杰伦', url: 'playlist/花海.mp3' },
+        { title: '蒲公英的约定', artist: '周杰伦', url: 'playlist/蒲公英的约定.mp3' },
+        { title: '说好的幸福呢', artist: '周杰伦', url: 'playlist/说好的幸福呢.mp3' },
+        { title: '青花瓷', artist: '周杰伦', url: 'playlist/青花瓷.mp3' }
     ];
     
     if (this.playlistData.length > 0) {
         this.loadSongInfo(0);
         this.renderPlaylist();
         this.statusBar.textContent = `已加载 ${this.playlistData.length} 首歌曲`;
-    }
-}
-
-// 删除第682行重复的 loadLyrics 方法，只保留第531行的版本
-// 修改第531行的 loadLyrics 方法：
-async loadLyrics(songUrl) {
-    try {
-        const lrcUrl = songUrl.replace('.mp3', '.lrc');
-        const response = await fetch('./' + lrcUrl);
-        if (response.ok) {
-            const lrcText = await response.text();
-            this.lyrics = this.parseLRC(lrcText);
-            this.displayLyrics();
-        } else {
-            this.lyrics = [];
-            this.displayNoLyrics();
-        }
-    } catch (error) {
-        console.error('加载歌词失败:', error);
-        this.lyrics = [];
-        this.displayNoLyrics();
     }
 }
