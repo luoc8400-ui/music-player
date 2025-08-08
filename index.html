@@ -679,7 +679,7 @@
             // 歌词加载方法
             async loadLyrics(songUrl) {
                 try {
-                    const lrcUrl = songUrl.replace('.mp3', '.lrc');
+                    const lrcUrl = songUrl.replace('.mp3', '.lrc').replace('playlist/', 'Lyrics file/');
                     const response = await fetch('./' + lrcUrl);  // ✅ 修正：直接指向根目录
                     if (response.ok) {
                         const lrcText = await response.text();
