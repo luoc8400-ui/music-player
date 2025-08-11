@@ -39,35 +39,6 @@
             position: relative;
         }
 
-        /* 搜索区域 */
-        .search-section {
-            padding: 15px 20px 10px;
-            background: rgba(0,0,0,0.3);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(0, 255, 136, 0.3);
-            border-radius: 25px;
-            color: #ffffff;
-            font-size: 16px;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .search-input:focus {
-            border-color: #00ff88;
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
-        }
-
-        .search-input::placeholder {
-            color: #999999;
-        }
-
         /* 主内容区域 */
         .main-content {
             flex: 1;
@@ -77,26 +48,26 @@
             overflow: hidden;
         }
 
-        /* 歌曲信息区域 - 压缩高度 */
+        /* 歌曲信息区域 */
         .song-info {
-            padding: 20px 20px 15px;
+            padding: 30px 20px 20px;
             text-align: center;
             background: rgba(0,0,0,0.2);
-            min-height: 80px;
+            min-height: 100px;
         }
 
         .song-title {
-            font-size: 1.3em;
+            font-size: 1.4em;
             font-weight: bold;
             color: #00ff88;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .song-artist {
-            font-size: 0.9em;
+            font-size: 1em;
             color: #cccccc;
         }
 
@@ -108,7 +79,7 @@
             background: rgba(0, 0, 0, 0.3);
             border-radius: 15px;
             margin: 10px 20px;
-            min-height: 300px; /* 增加最小高度 */
+            min-height: 350px; /* 增加最小高度 */
             max-height: none; /* 移除最大高度限制 */
         }
 
@@ -165,18 +136,18 @@
             border-radius: 3px;
         }
 
-        /* 进度条区域 - 压缩 */
+        /* 进度条区域 */
         .progress-section {
-            padding: 10px 20px;
+            padding: 15px 20px;
             background: rgba(0,0,0,0.2);
         }
 
         .time-display {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-family: 'Courier New', monospace;
-            font-size: 0.85em;
+            font-size: 0.8em;
             color: #ffffff;
         }
 
@@ -420,28 +391,19 @@
 
         /* 移动端响应式优化 */
         @media (max-width: 480px) {
-            .search-section {
-                padding: 12px 15px 8px;
-            }
-            
-            .search-input {
-                padding: 10px 18px;
-                font-size: 16px; /* 防止iOS缩放 */
-            }
-            
             .song-info {
-                padding: 15px 15px 10px;
-                min-height: 70px;
+                padding: 20px 15px 15px;
+                min-height: 80px;
             }
             
             .song-title {
-                font-size: 1.2em;
+                font-size: 1.3em;
             }
             
             .lyrics-section {
                 margin: 8px 15px;
                 padding: 12px 15px;
-                min-height: 280px;
+                min-height: 320px;
             }
             
             .lyrics-line {
@@ -482,7 +444,7 @@
         /* 超小屏幕优化 */
         @media (max-width: 360px) {
             .lyrics-section {
-                min-height: 250px;
+                min-height: 280px;
             }
             
             .control-btn {
@@ -501,11 +463,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- 搜索区域 -->
-        <div class="search-section">
-            <input type="text" class="search-input" id="searchInput" placeholder="🔍 搜索歌曲或艺术家...">
-        </div>
-
         <div class="main-content">
             <div class="song-info">
                 <div class="song-title" id="songTitle">选择一首歌曲</div>
@@ -604,7 +561,6 @@
                 this.playlistSidebar = document.getElementById('playlistSidebar');
                 this.playlistOverlay = document.getElementById('playlistOverlay');
                 this.closePlaylist = document.getElementById('closePlaylist');
-                this.searchInput = document.getElementById('searchInput');
                 this.playlistSearchInput = document.getElementById('playlistSearchInput');
                 this.isPlaylistVisible = false;
             }
@@ -618,8 +574,7 @@
                 this.closePlaylist.addEventListener('click', () => this.togglePlaylist());
                 this.playlistOverlay.addEventListener('click', () => this.togglePlaylist());
                 
-                // 搜索功能绑定
-                this.searchInput.addEventListener('input', (e) => this.handleMainSearch(e.target.value));
+                // 播放列表搜索功能绑定
                 this.playlistSearchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
                 
                 this.progressContainer.addEventListener('mousedown', (e) => this.handleDragStart(e));
@@ -628,33 +583,6 @@
                 this.progressContainer.addEventListener('touchstart', (e) => this.handleDragStart(e.touches[0]), { passive: true });
                 document.addEventListener('touchmove', (e) => this.handleDragMove(e.touches[0]));
                 document.addEventListener('touchend', () => this.handleDragEnd());
-            }
-            
-            // 主搜索功能（搜索并播放）
-            handleMainSearch(query) {
-                const searchTerm = query.toLowerCase().trim();
-                
-                if (searchTerm === '') {
-                    return;
-                }
-                
-                const matchedSongs = this.playlistData.filter(song => 
-                    song.title.toLowerCase().includes(searchTerm) || 
-                    song.artist.toLowerCase().includes(searchTerm)
-                );
-                
-                if (matchedSongs.length > 0) {
-                    // 播放第一个匹配的歌曲
-                    const firstMatch = matchedSongs[0];
-                    const index = this.playlistData.indexOf(firstMatch);
-                    this.playSong(index);
-                    
-                    // 清空搜索框
-                    this.searchInput.value = '';
-                    
-                    // 显示搜索结果
-                    this.statusBar.textContent = `找到 ${matchedSongs.length} 首歌曲，正在播放: ${firstMatch.title}`;
-                }
             }
             
             setupAudioEvents() {
@@ -678,7 +606,7 @@
                 });
             }
 
-            // ... existing code ...
+            // 歌词加载方法
             async loadLyrics(songUrl) {
                 try {
                     const lrcUrl = songUrl.replace('.mp3', '.lrc');
@@ -715,7 +643,7 @@
                 }
             }
 
-            // ... existing code ...
+            // LRC歌词解析
             parseLRC(lrcText) {
                 const lines = lrcText.split('\n');
                 const lyrics = [];
@@ -723,6 +651,7 @@
                 lines.forEach(line => {
                     let timeMatch, time, text;
                     
+                    // 检测三位毫秒格式 [mm:ss.xxx]
                     timeMatch = line.match(/\[(\d{2}):(\d{2})\.(\d{3})\](.*)/);
                     if (timeMatch) {
                         const minutes = parseInt(timeMatch[1]);
@@ -731,6 +660,7 @@
                         text = timeMatch[4].trim();
                         time = minutes * 60 + seconds + milliseconds / 1000;
                     } else {
+                        // 检测两位毫秒格式 [mm:ss.xx]
                         timeMatch = line.match(/\[(\d{2}):(\d{2})\.(\d{2})\](.*)/);
                         if (timeMatch) {
                             const minutes = parseInt(timeMatch[1]);
@@ -739,6 +669,7 @@
                             text = timeMatch[4].trim();
                             time = minutes * 60 + seconds + milliseconds / 1000;
                         } else {
+                            // 检测冒号格式 [mm:ss:xx]
                             timeMatch = line.match(/\[(\d{2}):(\d{2}):(\d{2})\](.*)/);
                             if (timeMatch) {
                                 const minutes = parseInt(timeMatch[1]);
@@ -767,7 +698,7 @@
                 return lyrics.sort((a, b) => a.time - b.time);
             }
 
-            // ... existing code ...
+            // 显示歌词
             displayLyrics() {
                 if (this.lyrics.length === 0) {
                     this.displayNoLyrics();
@@ -785,6 +716,7 @@
                     this.lyricsContent.appendChild(lyricLine);
                 });
                 
+                // 确保歌词容器可见
                 const lyricsSection = document.querySelector('.lyrics-section');
                 if (lyricsSection) {
                     lyricsSection.style.display = 'block';
@@ -795,13 +727,14 @@
                 this.lyricsContent.innerHTML = '<div class="lyrics-line">暂无歌词</div>';
             }
 
-            // ... existing code ...
+            // 更新歌词高亮
             updateLyrics() {
                 if (this.lyrics.length === 0) return;
                 
                 const currentTime = this.audio.currentTime;
                 let newIndex = -1;
                 
+                // 找到当前应该高亮的歌词行
                 for (let i = 0; i < this.lyrics.length; i++) {
                     if (currentTime >= this.lyrics[i].time) {
                         newIndex = i;
@@ -811,15 +744,19 @@
                 }
                 
                 if (newIndex !== this.currentLyricIndex) {
+                    // 移除之前的高亮
                     const prevActive = this.lyricsContent.querySelector('.lyrics-line.active');
                     if (prevActive) {
                         prevActive.classList.remove('active');
                     }
                     
+                    // 添加新的高亮
                     if (newIndex >= 0) {
                         const lines = this.lyricsContent.querySelectorAll('.lyrics-line');
                         if (lines[newIndex]) {
                             lines[newIndex].classList.add('active');
+                            
+                            // 改进的滚动逻辑
                             this.scrollToLyric(lines[newIndex], newIndex);
                         }
                     }
@@ -828,20 +765,23 @@
                 }
             }
 
-            // ... existing code ...
+            // 新增专门的滚动方法
             scrollToLyric(lyricElement, index) {
                 const container = this.lyricsContent.parentElement;
                 const containerHeight = container.clientHeight;
                 const elementTop = lyricElement.offsetTop;
                 const elementHeight = lyricElement.clientHeight;
                 
+                // 计算滚动位置，让当前歌词显示在容器中央
                 const scrollTop = elementTop - (containerHeight / 2) + (elementHeight / 2);
                 
+                // 平滑滚动
                 container.scrollTo({
                     top: Math.max(0, scrollTop),
                     behavior: 'smooth'
                 });
                 
+                // 备用方案：如果scrollTo不工作，使用scrollIntoView
                 setTimeout(() => {
                     if (Math.abs(container.scrollTop - scrollTop) > 10) {
                         lyricElement.scrollIntoView({
@@ -853,7 +793,7 @@
                 }, 100);
             }
 
-            // ... existing code ...
+            // 搜索功能（仅用于播放列表）
             handleSearch(query) {
                 const searchTerm = query.toLowerCase().trim();
                 
@@ -895,6 +835,7 @@
                 this.renderPlaylist();
                 this.setupMediaSession();
                 
+                // 加载歌词
                 this.loadLyrics(song.url);
             }
 
@@ -923,6 +864,7 @@
                 this.play();
             }
 
+            // 添加缺失的方法
             previousSong() {
                 if (this.playMode === 1) {
                     let newIndex;
@@ -1001,6 +943,7 @@
                         ]
                     });
 
+                    // 设置媒体控制动作
                     navigator.mediaSession.setActionHandler('play', () => {
                         this.play();
                     });
