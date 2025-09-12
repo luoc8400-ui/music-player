@@ -1,0 +1,23 @@
+{
+  "name": "超哥的音乐盒",
+  "short_name": "音乐盒",
+  "description": "一个功能完整的移动端音乐播放器",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#1a1a1a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "cover.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["music", "entertainment"],
+  "scope": "./",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "prefer_related_applications": false
+}
