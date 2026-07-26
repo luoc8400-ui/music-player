@@ -923,10 +923,21 @@ bindEvents() {
             }
 
             async play() {
-                // iOS 后台恢复播放：如果音频处于"假播放"状态（paused=false但实际无声），重新加载
-                if (!this.audio.paused && this.audio.readyState >= 2 && this.audio.currentTime > 0) {
-                    // 检查是否真的在出声（通过 readyState+currentTime 组合判断）
-                    console.log('play() called but audio may be stalled, reloading...');
+                // iOS 后台恢复：强制重新加载音频确保出声
+                const wasInBackground = document.visibilityState === 'hidden';
+                if (wasInBackground && !this.audio.paused && this.audio.currentTime > 0) {
+                    console.log('iOS background recovery: reloading audio');
+                    // 保存当前进度
+                    const savedTime = this.audio.currentTime;
+                    const currentSrc = this.audio.src;
+                    // 重新设置 src 强制刷新音频上下文
+                    this.audio.src = '';
+                    this.audio.load();
+                    await new Promise(r => setTimeout(r, 50));
+                    this.audio.src = currentSrc;
+                    this.audio.load();
+                    await new Promise(r => setTimeout(r, 100));
+                    this.audio.currentTime = savedTime;
                 }
                 console.log('开始播放，音频状态:', {
                     paused: this.audio.paused,
@@ -962,10 +973,18 @@ bindEvents() {
                 } catch (e) {
                     console.error('Play failed:', e.name, e.message);
                     this.statusBar.textContent = '播放失败，尝试恢复...';
-                    // iOS 后台恢复：重新加载音频源后再播放
-                    this.audio.load();
-                    // 如果是 iOS 后台上下文丢失，延时确保音频能恢复
-                    await new Promise(r => setTimeout(r, 200));
+                    // iOS 后台恢复：完全重建音频上下文
+                    try {
+                        const savedSrc = this.audio.src;
+                        const savedTime = this.audio.currentTime;
+                        this.audio.src = '';
+                        this.audio.load();
+                        await new Promise(r => setTimeout(r, 100));
+                        this.audio.src = savedSrc;
+                        this.audio.load();
+                        await new Promise(r => setTimeout(r, 300));
+                        this.audio.currentTime = savedTime;
+                    } catch(e2) {}
                     setTimeout(async () => {
                         try {
                             await this.audio.play();
@@ -1125,6 +1144,23 @@ bindEvents() {
             // 修改：增强后台播放处理
             handleVisibilityChange() {
                 console.log('页面可见性变化:', document.visibilityState);
+                // 从后台切回前台时，如果音频无声自动恢复
+                if (document.visibilityState === 'visible' && !this.audio.paused && this.audio.currentTime > 0 && this.audio.readyState >= 2) {
+                    // 检查是否真的在播放（返回前台时音频可能已无声）
+                    setTimeout(() => {
+                        if (!this.audio.paused && this.audio.currentTime > 0) {
+                            console.log('前台检测：检查音频是否正常播放');
+                            // 如果1秒内 currentTime 没有变化，说明无声
+                            const checkTime = this.audio.currentTime;
+                            setTimeout(() => {
+                                if (this.audio.currentTime === checkTime && !this.audio.paused && this.isPlaying) {
+                                    console.log('检测到无声播放，尝试恢复');
+                                    this.audio.play().catch(() => {});
+                                }
+                            }, 1000);
+                        }
+                    }, 500);
+                }
                 
                 if (document.visibilityState === 'visible') {
                     console.log('页面变为可见，当前状态:', {
@@ -1321,7 +1357,13 @@ bindEvents() {
                         this.updateMediaSessionPositionState();
                         
                         // 注册媒体控制事件，确保 iOS 控制中心显示歌曲信息
-                        navigator.mediaSession.setActionHandler('play', () => this.play());
+                        navigator.mediaSession.setActionHandler('play', () => {
+                            // iOS 后台恢复：强制重新加载音频
+                            if (document.visibilityState === 'hidden' && this.audio.paused) {
+                                console.log('MediaSession play from background, forcing reload');
+                            }
+                            this.play();
+                        });
                         navigator.mediaSession.setActionHandler('pause', () => this.pause());
                         navigator.mediaSession.setActionHandler('previoustrack', () => this.previousSong());
                         navigator.mediaSession.setActionHandler('nexttrack', () => this.nextSong());
