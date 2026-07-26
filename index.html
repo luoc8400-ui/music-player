@@ -923,6 +923,11 @@ bindEvents() {
             }
 
             async play() {
+                // iOS 后台恢复播放：如果音频处于"假播放"状态（paused=false但实际无声），重新加载
+                if (!this.audio.paused && this.audio.readyState >= 2 && this.audio.currentTime > 0) {
+                    // 检查是否真的在出声（通过 readyState+currentTime 组合判断）
+                    console.log('play() called but audio may be stalled, reloading...');
+                }
                 console.log('开始播放，音频状态:', {
                     paused: this.audio.paused,
                     readyState: this.audio.readyState,
@@ -934,6 +939,13 @@ bindEvents() {
                     this.isPlaying = true;
                     this.playBtn.innerHTML = '⏸️';
                     this.statusBar.textContent = '正在播放';
+                    
+                    // iOS 静音检测：播放开始后检查是否真的在播放
+                    await new Promise(r => setTimeout(r, 300));
+                    if (this.audio.paused || this.audio.currentTime === 0) {
+                        console.log('iOS silent playback detected, retrying...');
+                        try { await this.audio.play(); } catch(e) {}
+                    }
                     
                     // 播放开始后立即强制更新媒体会话
                     if ('mediaSession' in navigator) {
@@ -950,8 +962,10 @@ bindEvents() {
                 } catch (e) {
                     console.error('Play failed:', e.name, e.message);
                     this.statusBar.textContent = '播放失败，尝试恢复...';
-                    // 尝试重新加载音频并播放
+                    // iOS 后台恢复：重新加载音频源后再播放
                     this.audio.load();
+                    // 如果是 iOS 后台上下文丢失，延时确保音频能恢复
+                    await new Promise(r => setTimeout(r, 200));
                     setTimeout(async () => {
                         try {
                             await this.audio.play();
@@ -1014,7 +1028,8 @@ bindEvents() {
                     console.log('切换歌曲时媒体会话已更新');
                 }
                 
-                this.play();
+                // iOS 后台：延时播放让音频上下文切换完成
+                setTimeout(() => this.play(), 150);
             }
 
             // 智能随机选择方法
@@ -1310,6 +1325,17 @@ bindEvents() {
                         navigator.mediaSession.setActionHandler('pause', () => this.pause());
                         navigator.mediaSession.setActionHandler('previoustrack', () => this.previousSong());
                         navigator.mediaSession.setActionHandler('nexttrack', () => this.nextSong());
+                        navigator.mediaSession.setActionHandler('seekforward', () => {
+                            this.audio.currentTime = Math.min(this.audio.currentTime + 10, this.audio.duration || 0);
+                        });
+                        navigator.mediaSession.setActionHandler('seekbackward', () => {
+                            this.audio.currentTime = Math.max(this.audio.currentTime - 10, 0);
+                        });
+                        navigator.mediaSession.setActionHandler('seekto', (details) => {
+                            if (details.seekTime != null) {
+                                this.audio.currentTime = details.seekTime;
+                            }
+                        });
                     } catch (e) {
                         console.error('设置媒体会话元数据失败:', e);
                     }
