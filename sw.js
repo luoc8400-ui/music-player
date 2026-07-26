@@ -1,10 +1,13 @@
-const CACHE_NAME = 'music-player-v9';
+const CACHE_NAME = 'music-player-v11';
 const urlsToCache = [
   // 关键：移除 './'，避免缓存重定向
   './index.html',
   './manifest.json',
   './cover.jpg',
-  './sw.js'
+  './sw.js',
+  './playlist.json',
+  './admin.html',
+  './admin.js'
 ];
 
 // 安装 Service Worker 并缓存文件
@@ -31,9 +34,16 @@ self.addEventListener('fetch', event => {
   const AUDIO_EXTS = ['.mp3', '.ogg', '.wav'];
   const isAudio = AUDIO_EXTS.some(ext => url.pathname.endsWith(ext)) || event.request.destination === 'audio';
   const isLyrics = url.pathname.endsWith('.lrc');
+  const isCDN = url.hostname === 'cdn.jsdelivr.net';
 
   if (event.request.mode === 'navigate') {
     event.respondWith(handleNavigation(event.request));
+    return;
+  }
+
+  // CDN ???jsDelivr?????????????
+  if (isCDN) {
+    event.respondWith(networkFirstCache(event.request));
     return;
   }
 

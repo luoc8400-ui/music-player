@@ -540,6 +540,24 @@
                 this.maxRecentHistory = 20;
                 this._msReady = false;
                 
+                // ?? CDN ???jsDelivr + GitHub?
+                this.CDN_BASE = 'https://cdn.jsdelivr.net/gh/luoc8400-ui/music-player@latest/';
+                this.PAGE_BASE = '';  // ??????? playlist.json ?????
+                
+            /**
+             * ??????? URL
+             * @param {string} path - ?????? "???.mp3"
+             * @param {string} type - "media"?? CDN? ? "data"?? Pages?
+             */
+            getResourceUrl(path, type) {
+                if (type === 'media') {
+                    // MP3/LRC ? jsDelivr CDN ??
+                    return this.CDN_BASE + path;
+                }
+                // playlist.json ?????? Pages ????
+                return './' + path;
+            }
+                
                 this.initializeElements();
                 this.bindEvents();
                 this.setupAudioEvents();
@@ -702,7 +720,7 @@
                     const lrcUrl = songUrl.replace('.mp3', '.lrc');
                     console.log('正在加载歌词:', lrcUrl);
                     
-                    const response = await fetch(encodeURI('./' + lrcUrl));
+                    const response = await fetch(encodeURI(this.getResourceUrl(lrcUrl, 'media')));
                     if (response.ok) {
                         const lrcText = await response.text();
                         console.log('原始歌词内容长度:', lrcText.length);
@@ -891,7 +909,7 @@
                 if (song) {
                     this.songTitle.textContent = song.title;
                     this.songArtist.textContent = song.artist;
-                    this.audio.src = encodeURI(song.url);
+                    this.audio.src = encodeURI(this.getResourceUrl(song.url, 'media'));
                     this.audio.load();
                     this.renderPlaylist();
                     
@@ -1322,134 +1340,29 @@
             }
 
             // 本地播放列表加载（根据编辑计划更新）
-            loadLocalPlaylist() {
-                // 只保留存在的歌曲，添加 Reality
+                        async loadLocalPlaylist() {
+                try {
+                    const response = await fetch(this.getResourceUrl('playlist.json', 'data'));
+                    if (response.ok) {
+                        this.playlistData = await response.json();
+                    } else {
+                        throw new Error('playlist.json not found');
+                    }
+                } catch (e) {
+                    console.warn('? playlist.json ???????????????:', e.message);
+                    this.loadBackupPlaylist();
+                }
+                
+                this.renderPlaylist();
+                if (this.playlistData.length > 0) {
+                    this.loadSongInfo(0);
+                }
+            }
+            
+            loadBackupPlaylist() {
+                // ???????? playlist.json ????????
                 this.playlistData = [
-                    { title: 'Reality', artist: 'Lost Frequencies', url: 'Reality.mp3' },
-					{ title: 'Rolling in the Deep', artist: 'Adele', url: 'Rolling in the Deep.mp3' },
-                    { title: 'Stay With Me', artist: 'Sam Smith', url: 'Stay With Me.mp3' },
-                    { title: 'Waiting for Love', artist: 'Avicii', url: 'Waiting for Love.mp3' },
-                    { title: 'Whistle', artist: 'Flo Rida', url: 'Whistle.mp3' },
-                    { title: 'Wrap Me In Plastic', artist: 'CHROMANCE', url: 'Wrap Me In Plastic.mp3' },
-                    { title: '一眼万年', artist: '林俊杰', url: '一眼万年.mp3' },
-                    { title: '三生三世', artist: '张杰', url: '三生三世.mp3' },
-                    { title: '不能说的秘密', artist: '周杰伦', url: '不能说的秘密.mp3' },
-                    { title: '习惯失恋', artist: '容祖儿', url: '习惯失恋.mp3' },
-                    { title: '你瞒我瞒', artist: '陈柏宇', url: '你瞒我瞒.mp3' },
-                    { title: '依然爱你', artist: '王力宏', url: '依然爱你.mp3' },
-                    { title: '倔强', artist: '五月天', url: '倔强.mp3' },
-                    { title: '兰亭序', artist: '周杰伦', url: '兰亭序.mp3' },
-                    { title: '别搞', artist: '一道', url: '别搞.mp3' },
-                    { title: '可惜没有如果', artist: '林俊杰', url: '可惜没有如果.mp3' },
-                    { title: '告白气球', artist: '周杰伦', url: '告白气球.mp3' },
-                    { title: '嚣张', artist: 'en（王翊恩）', url: '嚣张.mp3' },
-                    { title: '天后', artist: '陈势安', url: '天后.mp3' },
-                    { title: '奢香夫人', artist: '凤凰传奇', url: '奢香夫人.mp3' },
-                    { title: '女孩', artist: '韦礼安', url: '女孩.mp3' },
-                    { title: '好心分手', artist: '卢巧音&王力宏', url: '好心分手.mp3' },
-                    { title: '孤独颂歌', artist: '陈文菲', url: '孤独颂歌.mp3' },
-                    { title: '少女的祈祷', artist: '杨千嬅', url: '少女的祈祷.mp3' },
-                    { title: '干杯', artist: '五月天', url: '干杯.mp3' },
-                    { title: '开往早晨的午夜', artist: '张碧晨', url: '开往早晨的午夜.mp3' },
-                    { title: '心墙', artist: '林俊杰', url: '心墙.mp3' },
-                    { title: '心淡', artist: '容祖儿', url: '心淡.mp3' },
-                    { title: '心跳', artist: '王力宏', url: '心跳.mp3' },
-                    { title: '必杀技', artist: '古巨基', url: '必杀技.mp3' },
-                    { title: '我们的歌', artist: '王力宏', url: '我们的歌.mp3' },
-                    { title: '我爱你不问归期', artist: '白小白', url: '我爱你不问归期.mp3' },
-                    { title: '手写的从前', artist: '周杰伦', url: '手写的从前.mp3' },
-                    { title: '搁浅', artist: '周杰伦', url: '搁浅.mp3' },
-                    { title: '无赖', artist: '郑中基', url: '无赖.mp3' },
-                    { title: '晴天', artist: '周杰伦', url: '晴天.mp3' },
-                    { title: '最后的人', artist: '杨小壮', url: '最后的人.mp3' },
-                    { title: '月半小夜曲', artist: '李克勤', url: '月半小夜曲.mp3' },
-                    { title: '月牙湾', artist: '飞儿乐团', url: '月牙湾.mp3' },
-                    { title: '枫', artist: '周杰伦', url: '枫.mp3' },
-                    { title: '派对动物', artist: '五月天', url: '派对动物.mp3' },
-                    { title: '海鸥', artist: '逃跑计划', url: '海鸥.mp3' },
-                    { title: '消愁', artist: '毛不易', url: '消愁.mp3' },
-                    { title: '爱一点', artist: '王力宏&章子怡', url: '爱一点.mp3' },
-                    { title: '爱的华尔兹', artist: '若雾&唐媛', url: '爱的华尔兹.mp3' },
-                    { title: '爱错', artist: '王力宏', url: '爱错.mp3' },
-                    { title: '珊瑚海', artist: '周杰伦', url: '珊瑚海.mp3' },
-                    { title: '知足', artist: '五月天', url: '知足.mp3' },
-                    { title: '稻香', artist: '周杰伦', url: '稻香.mp3' },
-                    { title: '等你下课', artist: '周杰伦', url: '等你下课.mp3' },
-                    { title: '简单爱', artist: '周杰伦', url: '简单爱.mp3' },
-                    { title: '给我一首歌的时间', artist: '周杰伦', url: '给我一首歌的时间.mp3' },
-                    { title: '美人鱼', artist: '林俊杰', url: '美人鱼.mp3' },
-                    { title: '群青', artist: 'YOASOBI', url: '群青.mp3' },
-                    { title: '自娱自乐', artist: '金志文', url: '自娱自乐.mp3' },
-					{ title: '花海', artist: '周杰伦', url: '花海.mp3' },
-					{ title: '若月亮还没来', artist: '杨宗纬/宝石Gem/王宇宙 Leto', url: '若月亮还没来.mp3' },
-                    { title: '蒲公英的约定', artist: '周杰伦', url: '蒲公英的约定.mp3' },
-                    { title: '许愿', artist: ' 梁咏琪&古巨基', url: '许愿.mp3' },
-                    { title: '说好的幸福呢', artist: '周杰伦', url: '说好的幸福呢.mp3' },
-                    { title: '那些你很冒险的梦', artist: '林俊杰', url: '那些你很冒险的梦.mp3' },
-                    { title: '那些年', artist: '胡夏', url: '那些年.mp3' },
-                    { title: '那年错过的爱情', artist: '白小白', url: '那年错过的爱情.mp3' },
-                    { title: '需要人陪', artist: '王力宏', url: '需要人陪.mp3' },
-                    { title: '青花瓷', artist: '周杰伦', url: '青花瓷.mp3' },
-					{ title: '鲜花', artist: '回春丹乐队', url: '鲜花.mp3' },
-                    { title: '杀手', artist: '林俊杰', url: '杀手.mp3' },
-					{ title: '西界', artist: '林俊杰', url: '西界.mp3' },
-					{ title: '编号89757', artist: '林俊杰', url: '编号89757.mp3' },
-					{ title: '手心的蔷薇', artist: '林俊杰&G.E.M.邓紫棋', url: '手心的蔷薇.mp3' },
-					{ title: '不为谁而作的歌', artist: '林俊杰', url: '不为谁而作的歌.mp3' },
-					{ title: '十七岁', artist: '刘德华', url: '十七岁.mp3' },
-					{ title: '算什么男人', artist: '周杰伦', url: '算什么男人.mp3' },
-					{ title: '龙卷风', artist: '周杰伦', url: '龙卷风.mp3' },
-					{ title: '烟花易冷', artist: '周杰伦', url: '烟花易冷.mp3' },
-					{ title: 'Mojito', artist: '周杰伦', url: 'Mojito.mp3' },
-					{ title: '我是如此相信', artist: '周杰伦', url: '我是如此相信.mp3' },
-					{ title: '轨迹', artist: '周杰伦', url: '轨迹.mp3' },
-					{ title: '东风破', artist: '周杰伦', url: '东风破.mp3' },
-					{ title: '发如雪', artist: '周杰伦', url: '发如雪.mp3' },
-					{ title: '断了的弦', artist: '周杰伦', url: '断了的弦.mp3' },
-					{ title: '七里香', artist: '周杰伦', url: '七里香.mp3' },
-					{ title: '突然好想你', artist: '五月天', url: '突然好想你.mp3' },
-					{ title: '你不是真正的快乐', artist: '五月天', url: '你不是真正的快乐.mp3' },
-					{ title: '恋爱ing', artist: '五月天', url: '恋爱ing.mp3' },
-					{ title: '后来的我们', artist: '五月天', url: '后来的我们.mp3' },
-					{ title: '伤心的人别听慢歌', artist: '五月天', url: '伤心的人别听慢歌.mp3' },
-					{ title: '爱的就是你', artist: '王力宏', url: '爱的就是你.mp3' },
-					{ title: '改变自己', artist: '王力宏', url: '改变自己.mp3' },
-					{ title: '她说', artist: '林俊杰', url: '她说.mp3' },
-					{ title: '不再见', artist: '陈学冬', url: '不再见.mp3' },
-					{ title: '第一眼', artist: '陈凯彤', url: '第一眼.mp3' },
-					{ title: '追光者', artist: '岑宁儿', url: '追光者.mp3' },
-					{ title: '海芋恋', artist: '萧敬腾', url: '海芋恋.mp3' },
-					{ title: '到处都是爱', artist: '萧敬腾', url: '到处都是爱.mp3' },
-					{ title: '易燃易爆炸', artist: '陈粒', url: '易燃易爆炸.mp3' },
-					{ title: '是非题', artist: '范玮琪', url: '是非题.mp3' },
-					{ title: '烟火里的尘埃', artist: '黄霄雲', url: '烟火里的尘埃.mp3' },
-					{ title: '世界が終るまでは…', artist: 'WANDS', url: '世界が終るまでは….mp3' },
-					{ title: 'DAN DAN 心魅かれてく', artist: 'ZARD', url: 'DAN DAN 心魅かれてく.mp3' },
-					{ title: '向阳而生(日出版)', artist: '华晨宇', url: '向阳而生(日出版).mp3' },
-					{ title: '爱的就是你', artist: '刘佳', url: '爱的就是你.mp3' },
-					{ title: '山高路远', artist: '全幺九', url: '山高路远.mp3' },
-					{ title: '开始懂了', artist: '孙燕姿', url: '开始懂了.mp3' },
-					{ title: '遇见', artist: '孙燕姿', url: '遇见.mp3' },
-					{ title: '独家记忆', artist: '陈小春', url: '独家记忆.mp3' },
-					{ title: '相依为命', artist: '陈小春', url: '相依为命.mp3' },
-					{ title: '离不开你', artist: '陈小春', url: '离不开你.mp3' },
-					{ title: '神啊 救救我', artist: '陈小春', url: '神啊 救救我.mp3' },
-					{ title: '友情岁月', artist: '郑伊健', url: '友情岁月.mp3' },
-					{ title: '恋人', artist: '李荣浩', url: '恋人.mp3' },
-					{ title: '雨爱', artist: '杨丞琳', url: '雨爱.mp3' },
-					{ title: '倒数', artist: 'G.E.M. 邓紫棋', url: '倒数.mp3' },
-					{ title: '光年之外', artist: 'G.E.M. 邓紫棋', url: '光年之外.mp3' },
-					{ title: '演员', artist: '薛之谦', url: '演员.mp3' },
-					{ title: '绅士', artist: '薛之谦', url: '绅士.mp3' },
-					{ title: '偏爱', artist: '张芸京', url: '偏爱.mp3' },
-					{ title: '有何不可', artist: '许嵩', url: '有何不可.mp3' },
-					{ title: '我乐意', artist: '许嵩', url: '我乐意.mp3' },
-					{ title: '素颜', artist: '许嵩&何曼婷', url: '素颜.mp3' },
-					{ title: '想定下来', artist: '关喆', url: '想定下来.mp3' },
-					{ title: '跌落凡间的天使', artist: '王祖蓝', url: '跌落凡间的天使.mp3' },
-					{ title: '自作多情', artist: '周慧敏', url: '自作多情.mp3' },
-					{ title: '冬天的秘密', artist: '周传雄', url: '冬天的秘密.mp3' },
-					{ title: '不如回家喝自来水', artist: '刘烨溦', url: '不如回家喝自来水.mp3' }
+                    { title: "Reality", artist: "Lost Frequencies", url: "Reality.mp3" }
                 ];
                 
                 this.renderPlaylist();

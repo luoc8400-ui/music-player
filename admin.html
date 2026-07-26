@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歌单管理 - 超哥的音乐盒</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="./cover.jpg" type="image/jpeg">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:Helvetica Neue,Arial,sans-serif;background:#121212;color:#e0e0e0;min-height:100vh;padding:20px}
+        .container{max-width:800px;margin:0 auto}
+        h1{font-size:1.5em;color:#fff;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+        h1 a{color:#00bcd4;text-decoration:none;font-size:0.7em}
+        .toolbar{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}
+        .toolbar button,.toolbar a{padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:0.9em;text-decoration:none;display:inline-block}
+        .btn-add{background:#00bcd4;color:#000}
+        .btn-export{background:#4caf50;color:#fff}
+        .btn-back{background:#333;color:#ccc}
+        .search-box{padding:10px 14px;background:#1e1e1e;border:1px solid #444;border-radius:8px;color:#fff;font-size:1em;width:200px;max-width:100%}
+        .song-list{list-style:none}
+        .song-item{display:flex;align-items:center;padding:12px 16px;background:#1e1e1e;border-radius:10px;margin-bottom:8px;gap:12px}
+        .song-item:hover{background:#2a2a2a}
+        .song-info{flex:1;min-width:0}
+        .song-title{font-size:1em;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .song-artist{font-size:0.85em;color:#999;margin-top:2px}
+        .song-actions{display:flex;gap:6px;flex-shrink:0}
+        .song-actions button{padding:6px 12px;border:none;border-radius:6px;cursor:pointer;font-size:0.8em}
+        .btn-edit{background:#1565c0;color:#fff}
+        .btn-del{background:#c62828;color:#fff}
+        .btn-move{background:#444;color:#fff;padding:6px 8px}
+        .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1000;justify-content:center;align-items:center}
+        .modal-overlay.show{display:flex}
+        .modal{background:#1e1e1e;border-radius:16px;padding:24px;width:90%;max-width:500px;max-height:90vh;overflow-y:auto}
+        .modal h2{color:#fff;margin-bottom:16px}
+        .form-group{margin-bottom:14px}
+        .form-group label{display:block;margin-bottom:4px;color:#aaa;font-size:0.9em}
+        .form-group input{width:100%;padding:10px 12px;background:#2a2a2a;border:1px solid #444;border-radius:8px;color:#fff;font-size:1em}
+        .form-group input:focus{outline:none;border-color:#00bcd4}
+        .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+        .modal-actions button{padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-size:0.9em}
+        .btn-cancel{background:#555;color:#fff}
+        .btn-save{background:#ff9800;color:#000}
+        .status-msg{margin-top:10px;padding:10px 16px;border-radius:8px;display:none}
+        .status-msg.success{display:block;background:#1b5e20;color:#a5d6a7}
+        .status-msg.error{display:block;background:#b71c1c;color:#ef9a9a}
+        .empty-msg{text-align:center;color:#666;padding:40px 20px}
+        @media(max-width:480px){body{padding:12px}.toolbar{flex-direction:column}.toolbar button,.toolbar a{width:100%;text-align:center}.search-box{width:100%}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>歌单管理 <a href="./index.html" target="_blank">返回播放器</a></h1>
+    <div class="toolbar">
+        <button class="btn-add" onclick="openAddModal()">+ 添加歌曲</button>
+        <input class="search-box" id="searchInput" placeholder="搜索歌曲..." oninput="renderList()">
+        <button class="btn-export" onclick="exportJSON()">导出 JSON</button>
+        <a class="btn-back" href="./playlist.json" target="_blank">查看 playlist.json</a>
+    </div>
+    <div id="statusMsg" class="status-msg"></div>
+    <div style="margin-bottom:12px;color:#888;font-size:0.9em">共 <span id="songCount">0</span> 首歌曲</div>
+    <div id="songList" class="song-list"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h2 id="modalTitle">添加歌曲</h2>
+        <div class="form-group">
+            <label>歌曲标题</label>
+            <input type="text" id="inputTitle" placeholder="例如: 七里香">
+        </div>
+        <div class="form-group">
+            <label>艺术家</label>
+            <input type="text" id="inputArtist" placeholder="例如: 周杰伦">
+        </div>
+        <div class="form-group">
+            <label>文件名 (MP3, 放在 song/ 目录下)</label>
+            <input type="text" id="inputUrl" placeholder="例如: song/七里香.mp3">
+            <div style="color:#666;font-size:0.8em;margin-top:4px">LRC 歌词文件使用同名 .lrc 文件，也放在 song/ 目录下</div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeModal()">取消</button>
+            <button class="btn-save" onclick="saveSong()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script src="./admin.js"></script>
+</body>
+</html>
