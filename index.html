@@ -540,25 +540,12 @@
                 this.maxRecentHistory = 20;
                 this._msReady = false;
                 
-                // ?? CDN ???jsDelivr + GitHub?
-                this.CDN_BASE = 'https://cdn.jsdelivr.net/gh/luoc8400-ui/music-player@latest/';
-                this.PAGE_BASE = '';  // ??????? playlist.json ?????
-                
-            /**
-             * ??????? URL
-             * @param {string} path - ?????? "???.mp3"
-             * @param {string} type - "media"?? CDN? ? "data"?? Pages?
-             */
-            getResourceUrl(path, type) {
-                if (type === 'media') {
-                    // MP3/LRC ? jsDelivr CDN ??
-                    return this.CDN_BASE + path;
-                }
-                // playlist.json ?????? Pages ????
-                return './' + path;
-            }
+                // CDN config
+                this.CDN_BASE = "https://cdn.jsdelivr.net/gh/luoc8400-ui/music-player@latest/";
+                this.PAGE_BASE = "";
                 
                 this.initializeElements();
+
                 this.bindEvents();
                 this.setupAudioEvents();
                 
@@ -596,7 +583,19 @@
                 this.isPlaylistVisible = false;
             }
             
-            bindEvents() {
+            
+            /**
+             * Get full URL for a resource
+             * @param {string} path - e.g. "song/songname.mp3"
+             * @param {string} type - "media" for CDN, "data" for Pages
+             */
+            getResourceUrl(path, type) {
+                if (type === 'media') {
+                    return this.CDN_BASE + path;
+                }
+                return './' + path;
+            }
+bindEvents() {
                 this.playBtn.addEventListener('click', () => this.togglePlay());
                 this.prevBtn.addEventListener('click', () => this.previousSong());
                 this.nextBtn.addEventListener('click', () => this.nextSong());
