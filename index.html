@@ -651,7 +651,10 @@ bindEvents() {
                     this.statusBar.textContent = '正在缓冲...';
                 });
                 
-                this.audio.addEventListener('ended', () => this.handleSongEnd());
+                this.audio.addEventListener('ended', () => {
+                    console.log('audio ended event, isPlaying:', this.isPlaying, 'playMode:', this.playMode);
+                    this.handleSongEnd();
+                });
                 this.audio.addEventListener('error', () => this.handleAudioError());
                 
                 // 处理页面可见性变化，支持后台播放
@@ -1081,6 +1084,8 @@ bindEvents() {
             }
 
             handleSongEnd() {
+                // 更新播放状态后再切换歌曲，确保后台也能连续播放
+                this.isPlaying = false;
                 this.playMode === 2 ? this.playSong(this.currentIndex) : this.nextSong();
             }
 
@@ -1181,6 +1186,7 @@ bindEvents() {
                 const progressPercent = (this.audio.currentTime / this.audio.duration) * 100 || 0;
                 this.progressBar.style.width = `${progressPercent}%`;
                 this.currentTime.textContent = this.formatTime(this.audio.currentTime);
+                this.totalTime.textContent = this.formatTime(this.audio.duration);
                 
                 // 更新媒体会话位置状态
                 this.updateMediaSessionPositionState();
@@ -1298,6 +1304,12 @@ bindEvents() {
                         });
                         navigator.mediaSession.playbackState = (this.isPlaying && !this.audio.paused) ? 'playing' : 'paused';
                         this.updateMediaSessionPositionState();
+                        
+                        // 注册媒体控制事件，确保 iOS 控制中心显示歌曲信息
+                        navigator.mediaSession.setActionHandler('play', () => this.play());
+                        navigator.mediaSession.setActionHandler('pause', () => this.pause());
+                        navigator.mediaSession.setActionHandler('previoustrack', () => this.previousSong());
+                        navigator.mediaSession.setActionHandler('nexttrack', () => this.nextSong());
                     } catch (e) {
                         console.error('设置媒体会话元数据失败:', e);
                     }
